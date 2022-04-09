@@ -1,12 +1,167 @@
 ---
-title: "class2"
+title: "Keyword Analysis of Regenerative Agriculture in the NY Times"
 author: "Benjamin Moscona"
 date: "4/6/2022"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(jsonlite) #convert results from API queries into R-friendly formats 
+library(tidyverse) 
+library(tidytext) #text data management and analysis
+library(ggplot2) #plot word frequencies and publication dates
+library(corpus)
+```
 
+```{r}
+#create an object called x with the results of our query ("regenerative agriculture")
+# the from JSON flatten the JSON object, then convert to a data frame
+t <- fromJSON("http://api.nytimes.com/svc/search/v2/articlesearch.json?q=regenerative+agriculture&api-key=pQyo4zhAeOpIUtea56uCrw7MiDIbIlKh", flatten = TRUE) #the string following "key=" is your API key 
+
+class(t) #what type of object is x?
+
+t <- t %>% 
+  data.frame()
+
+
+#Inspect our data
+class(t) #now what is it?
+dim(t) # how big is it?
+names(t) # what variables are we working with?
+#t <- readRDS("nytDat.rds") #in case of API emergency :)
+```
+
+```{r}
+term <- "Regenerative+Agriculture" # Need to use + to string together separate words
+begin_date <- "19900120"
+end_date <- "20220401"
+pk <- "pQyo4zhAeOpIUtea56uCrw7MiDIbIlKh"
+
+#construct the query url using API operators
+baseurl <- paste0("http://api.nytimes.com/svc/search/v2/articlesearch.json?q=",term,
+                  "&begin_date=",begin_date,"&end_date=",end_date,
+                  "&facet_filter=true&api-key=", pk, sep="")
+
+#examine our query url
+```
+
+```{r}
+#this code allows for obtaining multiple pages of query results 
+initialQuery <- fromJSON(baseurl)
+maxPages <- round((initialQuery$response$meta$hits[1] / 10)-1) 
+
+pages <- list()
+for(i in 0:maxPages){
+  nytSearch <- fromJSON(paste0(baseurl, "&page=", i), flatten = TRUE) %>% data.frame() 
+  message("Retrieving page ", i)
+  pages[[i+1]] <- nytSearch 
+  Sys.sleep(6) 
+}
+class(nytSearch)
+
+#need to bind the pages and create a tibble from nytDa
+nytSearch <- rbind_pages(pages)
+```
+
+```{r}
+nytSearch %>% 
+  group_by(response.docs.type_of_material) %>%
+  summarize(count=n()) %>%
+  mutate(percent = (count / sum(count))*100) %>%
+  ggplot() +
+  geom_bar(aes(y=percent,x=response.docs.type_of_material,
+               fill=response.docs.type_of_material), stat = "identity") + coord_flip() +
+  labs(x = "Type of Material", y = "Percent", fill = "Type of Material")
+```
+
+```{r}
+nytSearch %>%
+  mutate(pubDay=gsub("T.*","",response.docs.pub_date)) %>%
+  group_by(pubDay) %>%
+  summarise(count=n()) %>%
+  filter(count >= 2) %>%
+  ggplot() +
+  geom_bar(aes(x=reorder(pubDay, count), y=count), stat="identity") + coord_flip() +
+  labs(title = "# of publications referring to Regenerative Agriculture by publication day")
+```
+
+```{r}
+names(nytSearch)
+```
+Now, we look at word frequency using the first paragraph. Before we do that, let's remove stopwords, remove numbers, and stem some words
+```{r}
+paragraph <- names(nytSearch)[6] #The 6th column, "response.doc.lead_paragraph", is the one we want here.  
+tokenized <- nytSearch %>%
+  unnest_tokens(word, paragraph)
+
+data(stop_words)
+
+tokenized <- tokenized %>%
+  anti_join(stop_words)
+
+clean_tokens <- str_replace_all(tokenized$word,"environment[a-z A-Z]*","environment") #stem
+clean_tokens <- str_replace_all(tokenized$word,"forest[a-z A-Z]*","forest")
+clean_tokens <- str_replace_all(tokenized$word,"soil[a-z A-Z]*","soil")
+clean_tokens <- text_tokens(tokenized$word, stemmer = "en")
+clean_tokens <- str_remove_all(clean_tokens, "[:digit:]") #remove all numbers
+clean_tokens <- gsub("’s", '', clean_tokens)
+
+tokenized$clean <- clean_tokens
+
+#remove the empty strings
+tib <-subset(tokenized, clean!="")
+
+#reassign
+tokenized <- tib
+
+tokenized %>%
+  count(clean, sort = TRUE) %>%
+  filter(n > 15) %>%
+  mutate(clean = reorder(clean, n)) %>%
+  ggplot(aes(n, clean)) +
+  geom_col() +
+  labs(y = NULL, title = "Number of References in First Paragraph under \"Regenerative Agriculture\"")
+```
+
+Now, let's do the same thing but for just the headlines.
+
+```{r}
+title <- "response.docs.headline.main" #picking the headline now
+tokenized <- nytSearch %>%
+  unnest_tokens(word, title)
+
+data(stop_words)
+
+tokenized <- tokenized %>%
+  anti_join(stop_words)
+
+clean_tokens <- str_replace_all(tokenized$word,"environment[a-z A-Z]*","environment") #stem
+clean_tokens <- str_replace_all(tokenized$word,"forest[a-z A-Z]*","forest")
+clean_tokens <- str_replace_all(tokenized$word,"soil[a-z A-Z]*","soil")
+clean_tokens <- text_tokens(tokenized$word, stemmer = "en")
+clean_tokens <- str_remove_all(clean_tokens, "[:digit:]") #remove all numbers
+clean_tokens <- gsub("’s", '', clean_tokens)
+
+tokenized$clean <- clean_tokens
+
+#remove the empty strings
+tib <-subset(tokenized, clean!="")
+
+#reassign
+tokenized <- tib
+
+tokenized %>%
+  count(clean, sort = TRUE) %>%
+  filter(n > 5) %>%
+  mutate(clean = reorder(clean, n)) %>%
+  ggplot(aes(n, clean)) +
+  geom_col() +
+  labs(y = NULL, title = "Number of References in Headline under \"Regenerative Agriculture\"")
+```
+If we look at these two word distributions side-by-side, we notice that forests and climate are still two of the dominant words. "Farm" is much more dominant in the headline than in the first paragraph, whereas "food" is much more dominant in the first paragraph than the headline. Interestingly, the word "America" is present in seven headlines but has a lower distribution in the first paragraphs. It's interesting to consider headlines versus first paragraphs, especially considering the use of clickbait headlines with emotional or group appeals. Surprisingly, wine gets mentioned quite often in both headlines and first paragraphs, which makes me think I should explore the popularity of regenerative farming techniques in viticulture. Perhaps, wine producers are leaders in regenerative ag, or it is just a popular thing to report on.
