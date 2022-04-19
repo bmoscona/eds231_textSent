@@ -23,33 +23,9 @@ library(here)
 library(LexisNexisTools) #Nexis Uni data wrangling
 library(sentimentr)
 library(readr)
+library(corpus)
 ```
 
-### Intro to sentiment analysis example
-
-For this introductory example, I selected a text excerpt from the National Book Award winning book, *The Overstory* by Richard Powers*.*
-
-The excerpt is in .pdf format, so we'll need a tool (the pdftools package) to help us deal with that.
-
-```{r over_story_data}
-
-over <- pdf_text('Data/overstory_exerpt.pdf')
-over_df <- data.frame(text = over) %>% #create 1-column df with 'text' variable
-  mutate(page = 1:n()) #add a page number variable, 'page'
-
-#examine the beginning of the data frame
-
-over_text <- over_df %>%
-  filter(page %in% 8:41)%>%
-  mutate(text = str_split(text, '\n')) %>% #this splits by page. 
-  unnest(text) %>%  #this splits by line
-  mutate(line = str_to_lower(text)) #and convert to all lower case
-
-# write_csv(over_text, "Data/over_text.csv")
-
-#Note: \n, used above, is an example of an "escape sequence", which allow you to include characters that would otherwise break the code
-
-```
 
 We'll start by using the Bing sentiment analysis lexicon.
 
@@ -58,68 +34,6 @@ bing_sent <- get_sentiments('bing') #grab the bing sentiment lexicon from tidyte
 head(bing_sent, n = 20)
 ```
 
-Here is the starting point for reading in the data as a .csv. We need to unnest the text to the word level so we can label the individual sentiment words. Let's also remove stop words as standard text cleaning procedure. Note: Not every English word is in the lexicons because many English words are pretty neutral.
-
-```{r}
-over_text <- read_csv('Data/over_text.csv')
-
-#unnest to word-level tokens, remove stop words, and join sentiment words
- text_words <- over_text  %>%
-  unnest_tokens(output = word, input = text, token = 'words')
- 
- sent_words <- text_words %>% #break text into individual words
-  anti_join(stop_words, by = 'word') %>% #returns only the rows without stop words
-  inner_join(bing_sent, by = 'word') #joins and retains only sentiment words
-
-```
-
-Create a sentiment score by counting the number of sentiment words occurring per page. We can center the scores around an offset point equal to the average page sentiment score. This lets us measure the sentiment of a given page relative to the overall sentiment of the book.
-
-```{r apply_sent_scores}
-sent_scores <- sent_words %>%
-  count(sentiment, page) %>%
-  spread(sentiment, n) %>%
-  mutate(raw_score = positive - negative, #single sentiment score per page
-  offset = mean(positive - negative), #what is the average sentiment per page?
-  offset_score = (positive - negative) - offset) %>% #how does this page's sentiment compare to that of the average page?
-  arrange(desc(raw_score))
-sent_scores
-```
-
-```{r plot_sent_scores}
-ggplot(sent_scores, aes(x = page)) +
-  theme_classic() +
-  geom_bar(aes(y = raw_score), stat = 'identity', fill = 'slateblue3') +
-  geom_bar(aes(y = offset_score), stat = 'identity', fill = 'red4') +
-  geom_hline(yintercept = sent_scores$offset[1], linetype = 'dashed', size = .5) +
-  theme() +
-  labs(title = 'Sentiment analysis: The Overstory',
-       y = 'Sentiment score',
-       x = "Page Number")
-```
-
-##### Origin of the NRC lexicon
-
-"These guys selected about 10,000 words from an existing thesaurus... and then created a set of five questions to ask about each word that would reveal the emotions and polarity associated with it. That's a total of over 50,000 questions.
-
-They then asked these questions to over 2000 people, or Turkers, on Amazon's Mechanical Turk website, paying 4 cents for each set of properly answered questions.
-
-The result is a comprehensive word-emotion lexicon for over 10,000 words."
-
-Let's take a look at the most common sentiment words in the data set
-```{r nrc_sentiment}
-
-nrc_sent <- get_sentiments('nrc') #requires downloading a large dataset via prompt
-
-nrc_fear <- get_sentiments("nrc") %>% 
-  filter(sentiment == "fear")
-
-#most common words by sentiment
-fear_words <- over_text  %>%
-  unnest_tokens(output = word, input = text, token = 'words') %>%
-  inner_join(nrc_fear) %>%
-  count(word, sort = TRUE)
-```
 
 ```{r}
 nrc_word_counts <- text_words %>%
@@ -128,32 +42,6 @@ nrc_word_counts <- text_words %>%
   ungroup()
 ```
 
-
-Let's break it out and plot the contributions by particular words different sentiment categories
-```{r sent_counts}
-book_sent_counts <- text_words %>%
-        group_by(page) %>%
-        # mutate(page_num = 1:n(),
-        #        index = round(page_num / n(), 2)) %>%
-        #unnest_tokens(word, line) %>%
-        inner_join(get_sentiments("nrc")) %>%
-        group_by(sentiment) %>%
-        count(word, sentiment, sort = TRUE) %>%
-        ungroup()
-
-book_sent_counts %>%
-  group_by(sentiment) %>%
-  slice_max(n, n = 10) %>% 
-  ungroup() %>%
-  mutate(word = reorder(word, n)) %>%
-  ggplot(aes(n, word, fill = sentiment)) +
-  geom_col(show.legend = FALSE) +
-  facet_wrap(~sentiment, scales = "free_y") +
-  labs(x = "Contribution to sentiment",
-       y = NULL)
-```
-
-### Introduction to the Nexis Uni data source
 
 ```{r nexis_data, message=FALSE}
 #to follow along with this example, download this .docx to your working directory: 
@@ -170,48 +58,101 @@ paragraphs_df <- dat@paragraphs
 
 dat2<- data_frame(element_id = seq(1:length(meta_df$Headline)), Date = meta_df$Date, Headline = meta_df$Headline)
 
-#May be of use for assignment: using the full text from the articles
-# paragraphs_dat <- data_frame(element_id = paragraphs_df$Art_ID, Text  = paragraphs_df$Paragraph)
-# 
-# dat3 <- inner_join(dat2,paragraphs_dat, by = "element_id")
+# May be of use for assignment: using the full text from the articles
+paragraphs_dat <- data_frame(element_id = paragraphs_df$Art_ID, Text  = paragraphs_df$Paragraph)
+
+# paragraphs_dat$Text <- text_tokens(paragraphs_dat$Text)
+
+
+dat3 <- inner_join(dat2,paragraphs_dat, by = "element_id")
 
 ```
-
-```{r}
-#can we create a similar graph to Figure 3A from Froelich et al.? 
-mytext <- get_sentences(dat2$Headline)
-sent <- sentiment(mytext)
-
-sent_df <- inner_join(dat2, sent, by = "element_id")
-
-sentiment <- sentiment_by(sent_df$Headline)
-
-sent_df %>%
-  arrange(sentiment)
-
-```
-
 ```{r custom_stop_words}
 custom_stop_words <- bind_rows(tibble(word = c("your_word"),  
                                       lexicon = c("custom")), 
                                stop_words)
+
+clean_tokens <- str_replace_all(dat3$Text,"(.*)(((1[0-2]|0?[1-9])\\/(3[01]|[12][0-9]|0?[1-9])\\/(?:[0-9]{2})?[0-9]{2})|((Jan(uary)?|Feb(ruary)?|Mar(ch)?|Apr(il)?|May|Jun(e)?|Jul(y)?|Aug(ust)?|Sep(tember)?|Oct(ober)?|Nov(ember)?|Dec(ember)?)\\s+\\d{1,2},\\s+\\d{4}))(.*)","")
+
+dat3$text <- clean_tokens
 ```
 
+```{r}
+#can we create a similar graph to Figure 3A from Froelich et al.? 
+
+text_words <- dat3  %>%
+  unnest_tokens(output = word, input = Text, token = 'words')
+ 
+sent_words <- text_words %>% #break text into individual words
+  anti_join(stop_words, by = 'word') %>% #returns only the rows without stop words
+  inner_join(bing_sent, by = 'word') #joins and retains only sentiment words
 
 
-## Assignment (Due 4/19 by 5PM)
+sent_scores <- sent_words %>%
+  drop_na(Date) %>%
+  count(sentiment, element_id, Date) %>%
+  spread(sentiment, n) %>%
+  replace_na(list(positive = 0, negative = 0)) %>%
+  mutate(raw_score = positive - negative, #single sentiment score per page
+  offset = mean(positive - negative), #what is the average sentiment per page?
+  offset_score = (positive - negative) - offset) %>% #how does this page's sentiment compare to that of the average page?
+  arrange(desc(raw_score))
+sent_scores
 
-1.  Access the Nexis Uni database through the UCSB library: <https://www.library.ucsb.edu/research/db/211>
+```
+```{r nrc_sentiment}
 
-2.  Choose a key search term or terms to define a set of articles. 
+nrc_sent <- get_sentiments('nrc') #requires downloading a large dataset via prompt
 
-3.  Use your search term along with appropriate filters to obtain and download a batch of at least 100 full text search results (.docx).  
+nrc_fear <- get_sentiments("nrc") %>% 
+  filter(sentiment == "fear")
 
-4.  Read your Nexis article document into RStudio and parse with pdftools.
+#most common words by sentiment
+fear_words <- text_words  %>%
+  inner_join(nrc_fear) %>%
+  count(word, sort = TRUE)
+```
 
-5.  This time use the full text of the articles for the analysis.  First clean any artifacts of the data collection process (hint: this type of thing should be removed: "Apr 04, 2022( Biofuels Digest: http://www.biofuelsdigest.com/ Delivered by Newstex"))
+```{r}
+nrc_word_counts <- text_words %>%
+  inner_join(get_sentiments("nrc")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+```
 
-6.  Explore your data a bit and try to replicate some of the analyses above presented in class if you'd like (not necessary).  
+```{r sent_counts}
+book_sent_counts <- text_words %>%
+        drop_na(Date) %>% 
+        group_by(element_id, Date) %>%
+        # mutate(page_num = 1:n(),
+        #        index = round(page_num / n(), 2)) %>%
+        #unnest_tokens(word, line) %>%
+        inner_join(get_sentiments("nrc")) %>%
+        group_by(sentiment, Date) %>%
+        count(sentiment, sort = TRUE) %>%
+        ungroup() %>% 
+  group_by(Date) %>% 
+  mutate(tot = sum(n),
+         pct = n/tot) 
 
-7. Plot the amount of emotion words (the 8 from nrc) as a percentage of all the emotion words used each day (aggregate text from articles published on the same day).  How does the distribution of emotion words change over time?  Can you think of any reason this would be the case?
-Line color will be emotion, see how it changes over time as a percent of emotions classified
+book_sent_counts %>% 
+  ggplot(aes(Date, pct, color = sentiment)) + geom_line() +
+  labs(y = "Percent of Emotion Words", title = "April 2022 Emotions in Articles with keyword: Regenerative Agriculture")
+
+# book_sent_counts %>%
+#   group_by(sentiment, Date) %>%
+#   slice_max(n, n = 10) %>% 
+#   ungroup() %>%
+#   mutate(word = reorder(word, n)) %>%
+#   ggplot(aes(n, word, fill = sentiment)) +
+#   geom_col(show.legend = FALSE) +
+#   facet_wrap(~sentiment, scales = "free_y") +
+#   labs(x = "Contribution to sentiment",
+#        y = NULL)
+```
+
+Positive and negative as a percent of emotions run opposite of each other, which is reassurring from a robustness standpoint, even though the sentiment labels are not exclusive. Positivity still dominates the other sentiments. I would want to see how this changes over a longer period of time. In this graph, we have 500 articles in April 2022. I would love to use the NEXIS API to download the full set of 7000 articles over the past 5 years. Aroun April 11th, there was a large drop in positivity. I checked articles around this date and saw that it might have been driven down by a low earnings report from Ingredion, which mentions regenerative agriculture.
+
+
+
+
