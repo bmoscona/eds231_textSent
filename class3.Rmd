@@ -2,7 +2,9 @@
 title: 'Assignment 2: Sentiment Analysis 1'
 author: "Benjamin Moscona"
 date: "4/13/2022"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -33,20 +35,75 @@ We'll start by using the Bing sentiment analysis lexicon.
 bing_sent <- get_sentiments('bing') #grab the bing sentiment lexicon from tidytext
 head(bing_sent, n = 20)
 ```
-
-
 ```{r}
-nrc_word_counts <- text_words %>%
-  inner_join(get_sentiments("nrc")) %>%
-  count(word, sentiment, sort = TRUE) %>%
-  ungroup()
+my_files <- list.files(pattern = ".docx", path = "Data/",
+                       full.names = TRUE, recursive = TRUE, ignore.case = TRUE)
+
+dat <- lnt_read(my_files) #Object of class 'LNT output'
+
+
+meta_df <- dat@meta
+articles_df <- dat@articles
+paragraphs_df <- dat@paragraphs
+
+dat2 <- data_frame(element_id = seq(1:length(meta_df$Headline)), Date = meta_df$Date, Headline = meta_df$Headline)
+
+# May be of use for assignment: using the full text from the articles
+paragraphs_dat <- data_frame(element_id = paragraphs_df$Art_ID, Text  = paragraphs_df$Paragraph)
+
+# paragraphs_dat$Text <- text_tokens(paragraphs_dat$Text)
+
+
+dat3 <- inner_join(dat2,paragraphs_dat, by = "element_id")
+
+```
+```{r}
+custom_stop_words <- bind_rows(tibble(word = c("your_word"),  
+                                      lexicon = c("custom")), 
+                               stop_words)
+
+clean_tokens <- str_replace_all(dat3$Headline,"(.*)(((1[0-2]|0?[1-9])\\/(3[01]|[12][0-9]|0?[1-9])\\/(?:[0-9]{2})?[0-9]{2})|((Jan(uary)?|Feb(ruary)?|Mar(ch)?|Apr(il)?|May|Jun(e)?|Jul(y)?|Aug(ust)?|Sep(tember)?|Oct(ober)?|Nov(ember)?|Dec(ember)?)\\s+\\d{1,2},\\s+\\d{4}))(.*)","")
+
+dat3$Headline <- clean_tokens
+
+text_words <- dat3  %>%
+  unnest_tokens(output = word, input = Headline, token = 'words')
+ 
+sent_words <- text_words %>% #break text into individual words
+  anti_join(stop_words, by = 'word') %>% #returns only the rows without stop words
+  inner_join(bing_sent, by = 'word') #joins and retains only sentiment words
+
+
+sent_scores <- sent_words %>%
+  drop_na(Date) %>%
+  count(sentiment, element_id, Date) %>%
+  spread(sentiment, n) %>%
+  replace_na(list(positive = 0, negative = 0)) %>%
+  mutate(raw_score = positive - negative, #single sentiment score per page
+  offset = mean(positive - negative), #what is the average sentiment per page?
+  offset_score = (positive - negative) - offset) %>% #how does this page's sentiment compare to that of the average page?
+  arrange(desc(raw_score))
+
+sent_scores %>% 
+  mutate(positive = ifelse(offset_score >= 8, 1, 0),
+         negative = ifelse(offset_score <= -8, 1, 0),
+         neutral = ifelse(offset_score > -8 & offset_score < 8, 1, 0)) %>% 
+  group_by(Date) %>% 
+  summarize(positive = sum(positive),
+            negative = sum(negative),
+            neutral = sum(neutral)) %>% 
+  pivot_longer(-Date, names_to = "sentiment", values_to = "Number of Headlines") %>% 
+  ggplot(aes(Date, `Number of Headlines`, color = sentiment)) + geom_line() +
+  labs(title = "Sentiment over Time for IPCC-Related Article Headlines")
 ```
 
 
-```{r nexis_data, message=FALSE}
+
+
+```{r message=FALSE}
 #to follow along with this example, download this .docx to your working directory: 
 #https://github.com/MaRo406/EDS_231-text-sentiment/blob/main/nexis_dat/Nexis_IPCC_Results.docx
-my_files <- list.files(pattern = ".docx", path = getwd(),
+my_files <- list.files(pattern = ".docx", path = "Data/Articles/",
                        full.names = TRUE, recursive = TRUE, ignore.case = TRUE)
 
 dat <- lnt_read(my_files) #Object of class 'LNT output'
@@ -67,14 +124,14 @@ paragraphs_dat <- data_frame(element_id = paragraphs_df$Art_ID, Text  = paragrap
 dat3 <- inner_join(dat2,paragraphs_dat, by = "element_id")
 
 ```
-```{r custom_stop_words}
+```{r}
 custom_stop_words <- bind_rows(tibble(word = c("your_word"),  
                                       lexicon = c("custom")), 
                                stop_words)
 
 clean_tokens <- str_replace_all(dat3$Text,"(.*)(((1[0-2]|0?[1-9])\\/(3[01]|[12][0-9]|0?[1-9])\\/(?:[0-9]{2})?[0-9]{2})|((Jan(uary)?|Feb(ruary)?|Mar(ch)?|Apr(il)?|May|Jun(e)?|Jul(y)?|Aug(ust)?|Sep(tember)?|Oct(ober)?|Nov(ember)?|Dec(ember)?)\\s+\\d{1,2},\\s+\\d{4}))(.*)","")
 
-dat3$text <- clean_tokens
+dat3$Text <- clean_tokens
 ```
 
 ```{r}
@@ -100,7 +157,7 @@ sent_scores <- sent_words %>%
 sent_scores
 
 ```
-```{r nrc_sentiment}
+```{r}
 
 nrc_sent <- get_sentiments('nrc') #requires downloading a large dataset via prompt
 
@@ -120,7 +177,7 @@ nrc_word_counts <- text_words %>%
   ungroup()
 ```
 
-```{r sent_counts}
+```{r}
 book_sent_counts <- text_words %>%
         drop_na(Date) %>% 
         group_by(element_id, Date) %>%
