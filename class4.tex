@@ -1,0 +1,966 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\title{Sentiment Analysis 2}
+\author{Benjamin Moscona}
+\date{4/20/2022}
+
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Sentiment Analysis 2},
+  pdfauthor={Benjamin Moscona},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\begin{document}
+\maketitle
+
+\hypertarget{ipcc-report-twitter}{%
+\paragraph{IPCC Report Twitter}\label{ipcc-report-twitter}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(quanteda)}
+\CommentTok{\# devtools::install\_github("quanteda/quanteda.sentiment") \#not available currently through CRAN}
+\FunctionTok{library}\NormalTok{(quanteda.sentiment)}
+\FunctionTok{library}\NormalTok{(quanteda.textstats)}
+\FunctionTok{library}\NormalTok{(tidyverse)}
+\FunctionTok{library}\NormalTok{(tidytext)}
+\FunctionTok{library}\NormalTok{(lubridate)}
+\FunctionTok{library}\NormalTok{(wordcloud) }\CommentTok{\#visualization of common words in the data set}
+\FunctionTok{library}\NormalTok{(reshape2)}
+\end{Highlighting}
+\end{Shaded}
+
+Last week we used the tidytext approach to sentiment analysis for Nexis
+Uni .pdf data on coverage of the recent IPCC report. This week we will
+look at the conversation on Twitter about the same report. We'll start
+with the familiar tidy approach, and then introduce the quanteda package
+later.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{raw\_tweets }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"Data/IPCC\_tweets\_April1{-}10\_sample.csv"}\NormalTok{, }\AttributeTok{header=}\ConstantTok{TRUE}\NormalTok{)}
+
+\NormalTok{dat}\OtherTok{\textless{}{-}}\NormalTok{ raw\_tweets[,}\FunctionTok{c}\NormalTok{(}\DecValTok{4}\NormalTok{,}\DecValTok{6}\NormalTok{)] }\CommentTok{\# Extract Date and Title fields}
+
+\NormalTok{tweets }\OtherTok{\textless{}{-}} \FunctionTok{tibble}\NormalTok{(}\AttributeTok{text =}\NormalTok{ dat}\SpecialCharTok{$}\NormalTok{Title,}
+                  \AttributeTok{id =} \FunctionTok{seq}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(dat}\SpecialCharTok{$}\NormalTok{Title)),}
+                 \AttributeTok{date =} \FunctionTok{as.Date}\NormalTok{(dat}\SpecialCharTok{$}\NormalTok{Date,}\StringTok{\textquotesingle{}\%m/\%d/\%y\textquotesingle{}}\NormalTok{))}
+
+
+\FunctionTok{head}\NormalTok{(tweets}\SpecialCharTok{$}\NormalTok{text, }\AttributeTok{n =} \DecValTok{10}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1] "thank you, followers, for the great photo suggestions for our upcoming IPCC report - on Monday you will find the lucky one selected for our cover from among your submissions!\n\nwe now need a good picture on #biofuels . any suggestions please for which we can get copyrights fast?"        
+##  [2] "Greenpeace: The real solution to the climate crisis will require a rapid transition away from fossil fuels. \n\nWhat else we expect from the upcoming #IPCC report on climate solutions, set for publication on Monday, 4 April ⬇️  https://t.co/EC6a25S7tY"                                      
+##  [3] "Governments have a responsibility to ensure that #IPCCReport is grounded in rapid phaseout of fossil fuel use and production — not #FalseClimateSolutions. \n\nRead more in our open letter: https://t.co/4larBPgeba https://t.co/Fv1OphPmac"                                                    
+##  [4] "Next week, the IPCC will publish a new report detailing their new models and policy pathways. \n\nWant to study up before the headlines? Read @bertrandhb's second long read on CCS, explaining how and why IPCC models use so much saviour tech.\n\nhttps://t.co/6yBf0j7UWA"                    
+##  [5] "Live stream of virtual IPCC press conference releasing the report on mitigation of climate change, 9 a.m. GMT o... https://t.co/IqRCvvQxyX"                                                                                                                                                      
+##  [6] "Attention journalists: The deadline for embargoed materials for the upcoming @IPCC_CH report on climate mitigation has been extended to TODAY at 5:59 pm EDT. Register here: https://t.co/fLc4eHcOmm https://t.co/0eIlPb21kz"                                                                    
+##  [7] "The IPCC Report and “The Physics of Climate Change” https://t.co/xnxP3fup2a"                                                                                                                                                                                                                     
+##  [8] "With time running short and most of the Summary for Policymakers yet to be approved, #IPCC Working Group III added a fourth plenary to Thursday’s packed schedule in an attempt to make headway.\n\nMore ➡️ https://t.co/CRKNFzykYE\n\n#ClimateChange #AR6 #ClimateReport https://t.co/EoaasmOEZf"
+##  [9] "A helpful perspective on how to talk about the scenarios discussed in the forthcoming IPCC report https://t.co/Kpiim9NgNw"                                                                                                                                                                       
+## [10] "The private sector is an integral component of the water cycle and has much to lose as critical climate and water risks grow. \n\nThis presents an opportunity for collective action, writes Kirsten James of the sustainability nonprofit @CeresNews.  \n\nhttps://t.co/pC3kiJ6R1t"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#simple plot of tweets per day}
+\NormalTok{tweets }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{count}\NormalTok{(date) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ date, }\AttributeTok{y =}\NormalTok{ n))}\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{class4_files/figure-latex/tweet_data-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#let\textquotesingle{}s clean up the URLs from the tweets}
+\NormalTok{tweets}\SpecialCharTok{$}\NormalTok{text }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{"http[\^{}[:space:]]*"}\NormalTok{, }\StringTok{""}\NormalTok{,tweets}\SpecialCharTok{$}\NormalTok{text)}
+\NormalTok{tweets}\SpecialCharTok{$}\NormalTok{text }\OtherTok{\textless{}{-}} \FunctionTok{str\_to\_lower}\NormalTok{(tweets}\SpecialCharTok{$}\NormalTok{text)}
+\NormalTok{tweets}\SpecialCharTok{$}\NormalTok{text }\OtherTok{\textless{}{-}} \FunctionTok{iconv}\NormalTok{(tweets}\SpecialCharTok{$}\NormalTok{text, }\StringTok{"latin1"}\NormalTok{, }\StringTok{"ASCII"}\NormalTok{, }\AttributeTok{sub=}\StringTok{""}\NormalTok{)}
+
+\CommentTok{\#load sentiment lexicons}
+\NormalTok{bing\_sent }\OtherTok{\textless{}{-}} \FunctionTok{get\_sentiments}\NormalTok{(}\StringTok{\textquotesingle{}bing\textquotesingle{}}\NormalTok{)}
+\NormalTok{nrc\_sent }\OtherTok{\textless{}{-}} \FunctionTok{get\_sentiments}\NormalTok{(}\StringTok{\textquotesingle{}nrc\textquotesingle{}}\NormalTok{)}
+
+\CommentTok{\#tokenize tweets to individual words}
+\NormalTok{words }\OtherTok{\textless{}{-}}\NormalTok{ tweets }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(id, date, text) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{unnest\_tokens}\NormalTok{(}\AttributeTok{output =}\NormalTok{ word, }\AttributeTok{input =}\NormalTok{ text, }\AttributeTok{token =} \StringTok{"words"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{anti\_join}\NormalTok{(stop\_words, }\AttributeTok{by =} \StringTok{"word"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{left\_join}\NormalTok{(bing\_sent, }\AttributeTok{by =} \StringTok{"word"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{left\_join}\NormalTok{(}
+    \FunctionTok{tribble}\NormalTok{(}
+      \SpecialCharTok{\textasciitilde{}}\NormalTok{sentiment, }\SpecialCharTok{\textasciitilde{}}\NormalTok{sent\_score,}
+      \StringTok{"positive"}\NormalTok{, }\DecValTok{1}\NormalTok{,}
+      \StringTok{"negative"}\NormalTok{, }\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{),}
+    \AttributeTok{by =} \StringTok{"sentiment"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#take average sentiment score by tweet}
+\NormalTok{tweets\_sent }\OtherTok{\textless{}{-}}\NormalTok{ tweets }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{left\_join}\NormalTok{(}
+\NormalTok{    words }\SpecialCharTok{\%\textgreater{}\%}
+      \FunctionTok{group\_by}\NormalTok{(id) }\SpecialCharTok{\%\textgreater{}\%}
+      \FunctionTok{summarize}\NormalTok{(}
+        \AttributeTok{sent\_score =} \FunctionTok{mean}\NormalTok{(sent\_score, }\AttributeTok{na.rm =}\NormalTok{ T)),}
+    \AttributeTok{by =} \StringTok{"id"}\NormalTok{)}
+
+\NormalTok{neutral }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(}\FunctionTok{which}\NormalTok{(tweets\_sent}\SpecialCharTok{$}\NormalTok{sent\_score }\SpecialCharTok{==} \DecValTok{0}\NormalTok{))}
+\NormalTok{positive }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(}\FunctionTok{which}\NormalTok{(tweets\_sent}\SpecialCharTok{$}\NormalTok{sent\_score }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{))}
+\NormalTok{negative }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(}\FunctionTok{which}\NormalTok{(tweets\_sent}\SpecialCharTok{$}\NormalTok{sent\_score }\SpecialCharTok{\textless{}} \DecValTok{0}\NormalTok{))}
+
+\NormalTok{Sentiment }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"Positive"}\NormalTok{,}\StringTok{"Neutral"}\NormalTok{,}\StringTok{"Negative"}\NormalTok{)}
+\NormalTok{Count }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(positive,neutral,negative)}
+\NormalTok{output }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(Sentiment,Count)}
+\NormalTok{output}\SpecialCharTok{$}\NormalTok{Sentiment}\OtherTok{\textless{}{-}}\FunctionTok{factor}\NormalTok{(output}\SpecialCharTok{$}\NormalTok{Sentiment,}\AttributeTok{levels=}\NormalTok{Sentiment)}
+\FunctionTok{ggplot}\NormalTok{(output, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{Sentiment,}\AttributeTok{y=}\NormalTok{Count))}\SpecialCharTok{+}
+  \FunctionTok{geom\_bar}\NormalTok{(}\AttributeTok{stat =} \StringTok{"identity"}\NormalTok{, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{fill =}\NormalTok{ Sentiment))}\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_manual}\NormalTok{(}\StringTok{"legend"}\NormalTok{, }\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"Positive"} \OtherTok{=} \StringTok{"green"}\NormalTok{, }\StringTok{"Neutral"} \OtherTok{=} \StringTok{"black"}\NormalTok{, }\StringTok{"Negative"} \OtherTok{=} \StringTok{"red"}\NormalTok{))}\SpecialCharTok{+}
+  \FunctionTok{ggtitle}\NormalTok{(}\StringTok{"Barplot of Sentiment in IPCC tweets"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{class4_files/figure-latex/sentiment_calculations-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# tally sentiment score per day}
+\NormalTok{daily\_sent }\OtherTok{\textless{}{-}}\NormalTok{ tweets\_sent }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(date) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarize}\NormalTok{(}\AttributeTok{sent\_score =} \FunctionTok{mean}\NormalTok{(sent\_score, }\AttributeTok{na.rm =}\NormalTok{ T))}
+
+\NormalTok{daily\_sent }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{( }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ date, }\AttributeTok{y =}\NormalTok{ sent\_score)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{() }\SpecialCharTok{+}
+    \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"Date"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Avg Sentiment Score"}\NormalTok{,}
+    \AttributeTok{title =} \StringTok{"Daily Tweet Sentiment"}\NormalTok{,}
+    \AttributeTok{subtitle =} \StringTok{"IPCC Tweets"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{class4_files/figure-latex/plot_sentiment_by_day-1.pdf}
+
+Now let's try a new type of text visualization: the wordcloud.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{words }\SpecialCharTok{\%\textgreater{}\%}
+   \FunctionTok{anti\_join}\NormalTok{(stop\_words) }\SpecialCharTok{\%\textgreater{}\%}
+   \FunctionTok{count}\NormalTok{(word) }\SpecialCharTok{\%\textgreater{}\%}
+   \FunctionTok{with}\NormalTok{(}\FunctionTok{wordcloud}\NormalTok{(word, n, }\AttributeTok{max.words =} \DecValTok{100}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Joining, by = "word"
+\end{verbatim}
+
+\includegraphics{class4_files/figure-latex/wordcloud-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{words }\SpecialCharTok{\%\textgreater{}\%}
+\FunctionTok{inner\_join}\NormalTok{(}\FunctionTok{get\_sentiments}\NormalTok{(}\StringTok{"bing"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+\FunctionTok{count}\NormalTok{(word, sentiment, }\AttributeTok{sort =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+\FunctionTok{acast}\NormalTok{(word }\SpecialCharTok{\textasciitilde{}}\NormalTok{ sentiment, }\AttributeTok{value.var =} \StringTok{"n"}\NormalTok{, }\AttributeTok{fill =} \DecValTok{0}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+\FunctionTok{comparison.cloud}\NormalTok{(}\AttributeTok{colors =} \FunctionTok{c}\NormalTok{(}\StringTok{"gray20"}\NormalTok{, }\StringTok{"gray80"}\NormalTok{),}
+                   \AttributeTok{max.words =} \DecValTok{100}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Joining, by = c("word", "sentiment")
+\end{verbatim}
+
+\includegraphics{class4_files/figure-latex/wordcloud_comp-1.pdf}
+
+\hypertarget{the-quanteda-package}{%
+\paragraph{The quanteda package}\label{the-quanteda-package}}
+
+quanteda is a package (actually a family of packages) full of tools for
+conducting text analysis. quanteda.sentiment (not yet on CRAN, download
+from github) is the quanteda modular package for conducting sentiment
+analysis.
+
+quanteda has its own built in functions for cleaning text data. Let's
+take a look at some. First we have to clean the messy tweet data:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{corpus }\OtherTok{\textless{}{-}} \FunctionTok{corpus}\NormalTok{(dat}\SpecialCharTok{$}\NormalTok{Title) }\CommentTok{\#enter quanteda}
+\FunctionTok{summary}\NormalTok{(corpus)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Corpus consisting of 2411 documents, showing 100 documents:
+## 
+##     Text Types Tokens Sentences
+##    text1    43     53         2
+##    text2    37     42         2
+##    text3    31     32         2
+##    text4    42     49         3
+##    text5    21     25         2
+##    text6    30     33         1
+##    text7    10     12         1
+##    text8    40     42         2
+##    text9    16     17         1
+##   text10    36     42         2
+##   text11    16     16         1
+##   text12    34     44         6
+##   text13    35     46         3
+##   text14    46     52         2
+##   text15    42     51         1
+##   text16     7      7         1
+##   text17    42     48         2
+##   text18    17     17         2
+##   text19    43     60         1
+##   text20    27     34         3
+##   text21    40     43         3
+##   text22    44     50         3
+##   text23    28     30         2
+##   text24    35     38         3
+##   text25    36     41         3
+##   text26    37     43         4
+##   text27    21     23         1
+##   text28    29     31         1
+##   text29    12     13         1
+##   text30    45     47         2
+##   text31    38     42         1
+##   text32    31     36         1
+##   text33    14     14         1
+##   text34    41     49         1
+##   text35     7      7         1
+##   text36    44     54         2
+##   text37    26     28         1
+##   text38    13     13         1
+##   text39    13     13         1
+##   text40    31     37         2
+##   text41    47     54         4
+##   text42    38     46         1
+##   text43    42     46         2
+##   text44    22     24         2
+##   text45    38     46         1
+##   text46    16     16         1
+##   text47    30     32         1
+##   text48    17     17         1
+##   text49    13     13         1
+##   text50    23     23         1
+##   text51    23     25         1
+##   text52    25     27         1
+##   text53    13     13         1
+##   text54    34     35         3
+##   text55    38     46         1
+##   text56    38     46         1
+##   text57    38     46         1
+##   text58    38     46         1
+##   text59    38     46         1
+##   text60    38     46         1
+##   text61    19     19         2
+##   text62    17     18         1
+##   text63    11     11         1
+##   text64    13     13         1
+##   text65    14     16         1
+##   text66    12     12         2
+##   text67    18     18         1
+##   text68    38     46         1
+##   text69    15     16         1
+##   text70    12     13         1
+##   text71    30     35         2
+##   text72    22     23         1
+##   text73    38     46         1
+##   text74    39     46         1
+##   text75    13     13         1
+##   text76    32     35         1
+##   text77    38     46         1
+##   text78    39     45         2
+##   text79    38     46         1
+##   text80    36     41         1
+##   text81    33     33         2
+##   text82    18     19         1
+##   text83    38     46         1
+##   text84    38     46         1
+##   text85    38     46         1
+##   text86    39     43         2
+##   text87    13     13         1
+##   text88    13     13         1
+##   text89    38     46         1
+##   text90    38     46         1
+##   text91    38     46         1
+##   text92    40     43         1
+##   text93    11     11         1
+##   text94    41     49         1
+##   text95    38     46         1
+##   text96    15     15         1
+##   text97    29     31         1
+##   text98    11     11         1
+##   text99    13     13         1
+##  text100    38     46         1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tokens }\OtherTok{\textless{}{-}} \FunctionTok{tokens}\NormalTok{(corpus) }\CommentTok{\#tokenize the text so each doc (page, in this case) is a list of tokens (words)}
+
+\CommentTok{\#examine the uncleaned version}
+\NormalTok{tokens}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Tokens consisting of 2,411 documents.
+## text1 :
+##  [1] "thank"       "you"         ","           "followers"   ","          
+##  [6] "for"         "the"         "great"       "photo"       "suggestions"
+## [11] "for"         "our"        
+## [ ... and 41 more ]
+## 
+## text2 :
+##  [1] "Greenpeace" ":"          "The"        "real"       "solution"  
+##  [6] "to"         "the"        "climate"    "crisis"     "will"      
+## [11] "require"    "a"         
+## [ ... and 30 more ]
+## 
+## text3 :
+##  [1] "Governments"    "have"           "a"              "responsibility"
+##  [5] "to"             "ensure"         "that"           "#IPCCReport"   
+##  [9] "is"             "grounded"       "in"             "rapid"         
+## [ ... and 20 more ]
+## 
+## text4 :
+##  [1] "Next"      "week"      ","         "the"       "IPCC"      "will"     
+##  [7] "publish"   "a"         "new"       "report"    "detailing" "their"    
+## [ ... and 37 more ]
+## 
+## text5 :
+##  [1] "Live"       "stream"     "of"         "virtual"    "IPCC"      
+##  [6] "press"      "conference" "releasing"  "the"        "report"    
+## [11] "on"         "mitigation"
+## [ ... and 13 more ]
+## 
+## text6 :
+##  [1] "Attention"   "journalists" ":"           "The"         "deadline"   
+##  [6] "for"         "embargoed"   "materials"   "for"         "the"        
+## [11] "upcoming"    "@IPCC_CH"   
+## [ ... and 21 more ]
+## 
+## [ reached max_ndoc ... 2,405 more documents ]
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#clean it up}
+\NormalTok{tokens }\OtherTok{\textless{}{-}} \FunctionTok{tokens}\NormalTok{(tokens, }\AttributeTok{remove\_punct =} \ConstantTok{TRUE}\NormalTok{,}
+                      \AttributeTok{remove\_numbers =} \ConstantTok{TRUE}\NormalTok{)}
+
+\NormalTok{tokens }\OtherTok{\textless{}{-}} \FunctionTok{tokens\_select}\NormalTok{(tokens, }\FunctionTok{stopwords}\NormalTok{(}\StringTok{\textquotesingle{}english\textquotesingle{}}\NormalTok{),}\AttributeTok{selection=}\StringTok{\textquotesingle{}remove\textquotesingle{}}\NormalTok{) }\CommentTok{\#stopwords lexicon built in to quanteda}
+
+\CommentTok{\#tokens \textless{}{-} tokens\_wordstem(tokens) \#stem words down to their base form for comparisons across tense and quantity}
+
+\NormalTok{tokens }\OtherTok{\textless{}{-}} \FunctionTok{tokens\_tolower}\NormalTok{(tokens)}
+\end{Highlighting}
+\end{Shaded}
+
+We can use the kwic function (keywords-in-context) to briefly examine
+the context in which certain words or patterns appear.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{head}\NormalTok{(}\FunctionTok{kwic}\NormalTok{(tokens, }\AttributeTok{pattern =} \StringTok{"climate"}\NormalTok{, }\AttributeTok{window =} \DecValTok{3}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Keyword-in-context with 6 matches.                                                     
+##    [text2, 4]    greenpeace real solution | climate |
+##   [text2, 17]        upcoming#ipcc report | climate |
+##   [text5, 10] releasing report mitigation | climate |
+##    [text6, 9]     upcoming@ipcc_ch report | climate |
+##    [text7, 4]         ipcc report physics | climate |
+##  [text10, 10]          much lose critical | climate |
+##                                
+##  crisis require rapid          
+##  solutions set publication     
+##  change a.m gmt                
+##  mitigation extended today     
+##  change https://t.co/xnxp3fup2a
+##  water risks grow
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{head}\NormalTok{(}\FunctionTok{kwic}\NormalTok{(tokens, }\AttributeTok{pattern =} \FunctionTok{phrase}\NormalTok{(}\StringTok{"climate change"}\NormalTok{), }\AttributeTok{window =} \DecValTok{3}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Keyword-in-context with 6 matches.                                                               
+##   [text5, 10:11] releasing report mitigation | climate change |
+##     [text7, 4:5]         ipcc report physics | climate change |
+##  [text14, 15:16]         avert worst effects | climate change |
+##  [text15, 10:11]   s#climatereport emissions | climate change |
+##    [text20, 1:2]                             | climate change |
+##    [text24, 6:7]      report revealed threat | climate change |
+##                                 
+##  a.m gmt o                      
+##  https://t.co/xnxp3fup2a        
+##  anyone think revolution        
+##  meenakshi raman@sahabatalammsia
+##  want learn 100s                
+##  team weighed findings
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{hash\_tweets }\OtherTok{\textless{}{-}} \FunctionTok{tokens}\NormalTok{(corpus, }\AttributeTok{remove\_punct =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+               \FunctionTok{tokens\_keep}\NormalTok{(}\AttributeTok{pattern =} \StringTok{"\#*"}\NormalTok{)}
+
+\NormalTok{dfm\_hash}\OtherTok{\textless{}{-}} \FunctionTok{dfm}\NormalTok{(hash\_tweets)}
+
+\NormalTok{tstat\_freq }\OtherTok{\textless{}{-}} \FunctionTok{textstat\_frequency}\NormalTok{(dfm\_hash, }\AttributeTok{n =} \DecValTok{100}\NormalTok{)}
+\FunctionTok{head}\NormalTok{(tstat\_freq, }\DecValTok{10}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##              feature frequency rank docfreq group
+## 1              #ipcc       464    1     460   all
+## 2     #climatechange       137    2     135   all
+## 3     #climatecrisis       118    3     117   all
+## 4     #climatereport        97    4      97   all
+## 5        #ipccreport        87    5      87   all
+## 6           #climate        68    6      67   all
+## 7  #climateemergency        45    7      45   all
+## 8     #climateaction        44    8      44   all
+## 9     #globalwarming        24    9      24   all
+## 10 #climateactionnow        23   10      23   all
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#tidytext gives us tools to convert to tidy from non{-}tidy formats}
+\NormalTok{hash\_tib}\OtherTok{\textless{}{-}} \FunctionTok{tidy}\NormalTok{(dfm\_hash)}
+
+\NormalTok{hash\_tib }\SpecialCharTok{\%\textgreater{}\%}
+   \FunctionTok{count}\NormalTok{(term) }\SpecialCharTok{\%\textgreater{}\%}
+   \FunctionTok{with}\NormalTok{(}\FunctionTok{wordcloud}\NormalTok{(term, n, }\AttributeTok{max.words =} \DecValTok{100}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{class4_files/figure-latex/explore_hashtags-1.pdf}
+
+Create the sparse matrix representation known as the document-feature
+matrix. quanteda's textstat\_polarity function has multiple ways to
+combine polarity to a single score. The sent\_logit value to fun
+argument is the log of (pos/neg) counts.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dfm }\OtherTok{\textless{}{-}} \FunctionTok{dfm}\NormalTok{(tokens)}
+
+\FunctionTok{topfeatures}\NormalTok{(dfm, }\DecValTok{12}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    climate       ipcc     report     change        now      #ipcc      world 
+##       1396       1243       1225        651        505        464        346 
+##  emissions      never        new     latest scientists 
+##        333        291        279        279        274
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dfm.sentiment }\OtherTok{\textless{}{-}} \FunctionTok{dfm\_lookup}\NormalTok{(dfm, }\AttributeTok{dictionary =}\NormalTok{ data\_dictionary\_LSD2015)}
+
+\FunctionTok{head}\NormalTok{(}\FunctionTok{textstat\_polarity}\NormalTok{(tokens, data\_dictionary\_LSD2015, }\AttributeTok{fun =}\NormalTok{ sent\_logit))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   doc_id sentiment
+## 1  text1  2.197225
+## 2  text2 -1.098612
+## 3  text3  1.945910
+## 4  text4  0.000000
+## 5  text5  1.098612
+## 6  text6  1.098612
+\end{verbatim}
+
+\hypertarget{assignment}{%
+\subsubsection{Assignment}\label{assignment}}
+
+You will use the tweet data from class today for each part of the
+following assignment.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Think about how to further clean a twitter data set. Let's assume that
+  the mentions of twitter accounts is not useful to us. Remove them from
+  the text field of the tweets tibble.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tweets}\SpecialCharTok{$}\NormalTok{text }\OtherTok{\textless{}{-}} \FunctionTok{str\_remove}\NormalTok{(tweets}\SpecialCharTok{$}\NormalTok{text, }\StringTok{"@.*"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{1}
+\tightlist
+\item
+  Compare the ten most common terms in the tweets per day. Do you notice
+  anything interesting?
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#tokenize tweets to individual words}
+\NormalTok{words }\OtherTok{\textless{}{-}}\NormalTok{ tweets }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(id, date, text) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{unnest\_tokens}\NormalTok{(}\AttributeTok{output =}\NormalTok{ word, }\AttributeTok{input =}\NormalTok{ text, }\AttributeTok{token =} \StringTok{"words"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{anti\_join}\NormalTok{(stop\_words, }\AttributeTok{by =} \StringTok{"word"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{left\_join}\NormalTok{(bing\_sent, }\AttributeTok{by =} \StringTok{"word"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{left\_join}\NormalTok{(}
+    \FunctionTok{tribble}\NormalTok{(}
+      \SpecialCharTok{\textasciitilde{}}\NormalTok{sentiment, }\SpecialCharTok{\textasciitilde{}}\NormalTok{sent\_score,}
+      \StringTok{"positive"}\NormalTok{, }\DecValTok{1}\NormalTok{,}
+      \StringTok{"negative"}\NormalTok{, }\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{),}
+    \AttributeTok{by =} \StringTok{"sentiment"}\NormalTok{)}
+
+\NormalTok{words }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{group\_by}\NormalTok{(word) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{summarize}\NormalTok{(}\AttributeTok{n =} \FunctionTok{n}\NormalTok{()) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{arrange}\NormalTok{(}\FunctionTok{desc}\NormalTok{(n))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 5,261 x 2
+##    word           n
+##    <chr>      <int>
+##  1 ipcc        1577
+##  2 climate     1378
+##  3 report      1084
+##  4 change       621
+##  5 world        332
+##  6 emissions    326
+##  7 scientists   269
+##  8 fossil       255
+##  9 warming      233
+## 10 global       199
+## # ... with 5,251 more rows
+\end{verbatim}
+
+All 10 words are related directly to the IPCC report or climate change.
+``ipcc'' is mentioned most, followed by ``climate'' and ``report''. None
+of this is particularly surprising to me.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{2}
+\tightlist
+\item
+  Adjust the wordcloud in the ``wordcloud'' chunk by coloring the
+  positive and negative words so they are identifiable.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{words }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{anti\_join}\NormalTok{(stop\_words) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{inner\_join}\NormalTok{(}\FunctionTok{get\_sentiments}\NormalTok{(}\StringTok{"bing"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{count}\NormalTok{(word, sentiment, }\AttributeTok{sort =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{acast}\NormalTok{(word }\SpecialCharTok{\textasciitilde{}}\NormalTok{ sentiment, }\AttributeTok{value.var =} \StringTok{"n"}\NormalTok{, }\AttributeTok{fill =} \DecValTok{0}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{comparison.cloud}\NormalTok{(}\AttributeTok{colors =} \FunctionTok{c}\NormalTok{(}\StringTok{"red"}\NormalTok{, }\StringTok{"green"}\NormalTok{),}
+                   \AttributeTok{max.words =} \DecValTok{100}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Joining, by = "word"
+\end{verbatim}
+
+\begin{verbatim}
+## Joining, by = c("word", "sentiment")
+\end{verbatim}
+
+\includegraphics{class4_files/figure-latex/unnamed-chunk-4-1.pdf}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{3}
+\tightlist
+\item
+  Let's say we are interested in the most prominent entities in the
+  Twitter discussion. Which are the top 10 most tagged accounts in the
+  data set. Hint: the ``explore\_hashtags'' chunk is a good starting
+  point.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{hash\_tweets }\OtherTok{\textless{}{-}} \FunctionTok{tokens}\NormalTok{(corpus, }\AttributeTok{remove\_punct =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+               \FunctionTok{tokens\_keep}\NormalTok{(}\AttributeTok{pattern =} \StringTok{"@*"}\NormalTok{)}
+
+\NormalTok{dfm\_hash}\OtherTok{\textless{}{-}} \FunctionTok{dfm}\NormalTok{(hash\_tweets)}
+
+\NormalTok{tstat\_freq }\OtherTok{\textless{}{-}} \FunctionTok{textstat\_frequency}\NormalTok{(dfm\_hash, }\AttributeTok{n =} \DecValTok{100}\NormalTok{)}
+\FunctionTok{head}\NormalTok{(tstat\_freq, }\DecValTok{10}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##             feature frequency rank docfreq group
+## 1          @ipcc_ch       131    1     131   all
+## 2   @logicalindians        38    2      38   all
+## 3  @antonioguterres        16    3      16   all
+## 4          @nytimes        14    4      14   all
+## 5            @yahoo        14    4      14   all
+## 6            @potus        13    6      13   all
+## 7               @un        12    7      12   all
+## 8          @youtube        11    8      11   all
+## 9  @conversationedu        10    9      10   all
+## 10            @ipcc         9   10       9   all
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#tidytext gives us tools to convert to tidy from non{-}tidy formats}
+\NormalTok{hash\_tib}\OtherTok{\textless{}{-}} \FunctionTok{tidy}\NormalTok{(dfm\_hash)}
+
+\NormalTok{hash\_tib }\SpecialCharTok{\%\textgreater{}\%}
+   \FunctionTok{count}\NormalTok{(term) }\SpecialCharTok{\%\textgreater{}\%}
+   \FunctionTok{with}\NormalTok{(}\FunctionTok{wordcloud}\NormalTok{(term, n, }\AttributeTok{max.words =} \DecValTok{100}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning in strwidth(words[i], cex = size[i], ...): conversion failure on
+## '@sussanley⁩' in 'mbcsToSbcs': dot substituted for <e2>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in strwidth(words[i], cex = size[i], ...): conversion failure on
+## '@sussanley⁩' in 'mbcsToSbcs': dot substituted for <81>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in strwidth(words[i], cex = size[i], ...): conversion failure on
+## '@sussanley⁩' in 'mbcsToSbcs': dot substituted for <a9>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in text.default(x1, y1, words[i], cex = size[i], offset = 0, srt =
+## rotWord * : conversion failure on '@sussanley⁩' in 'mbcsToSbcs': dot substituted
+## for <e2>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in text.default(x1, y1, words[i], cex = size[i], offset = 0, srt =
+## rotWord * : conversion failure on '@sussanley⁩' in 'mbcsToSbcs': dot substituted
+## for <81>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in text.default(x1, y1, words[i], cex = size[i], offset = 0, srt =
+## rotWord * : conversion failure on '@sussanley⁩' in 'mbcsToSbcs': dot substituted
+## for <a9>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in text.default(x1, y1, words[i], cex = size[i], offset = 0, srt =
+## rotWord * : font metrics unknown for Unicode character U+2069
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in strwidth(words[i], cex = size[i], ...): conversion failure on
+## '@ipcc_ch⁩' in 'mbcsToSbcs': dot substituted for <e2>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in strwidth(words[i], cex = size[i], ...): conversion failure on
+## '@ipcc_ch⁩' in 'mbcsToSbcs': dot substituted for <81>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in strwidth(words[i], cex = size[i], ...): conversion failure on
+## '@ipcc_ch⁩' in 'mbcsToSbcs': dot substituted for <a9>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in text.default(x1, y1, words[i], cex = size[i], offset = 0, srt =
+## rotWord * : conversion failure on '@ipcc_ch⁩' in 'mbcsToSbcs': dot substituted
+## for <e2>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in text.default(x1, y1, words[i], cex = size[i], offset = 0, srt =
+## rotWord * : conversion failure on '@ipcc_ch⁩' in 'mbcsToSbcs': dot substituted
+## for <81>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in text.default(x1, y1, words[i], cex = size[i], offset = 0, srt =
+## rotWord * : conversion failure on '@ipcc_ch⁩' in 'mbcsToSbcs': dot substituted
+## for <a9>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in text.default(x1, y1, words[i], cex = size[i], offset = 0, srt =
+## rotWord * : font metrics unknown for Unicode character U+2069
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in strwidth(words[i], cex = size[i], ...): conversion failure on
+## '@sen_joemanchin⁩' in 'mbcsToSbcs': dot substituted for <e2>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in strwidth(words[i], cex = size[i], ...): conversion failure on
+## '@sen_joemanchin⁩' in 'mbcsToSbcs': dot substituted for <81>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in strwidth(words[i], cex = size[i], ...): conversion failure on
+## '@sen_joemanchin⁩' in 'mbcsToSbcs': dot substituted for <a9>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in text.default(x1, y1, words[i], cex = size[i], offset = 0, srt
+## = rotWord * : conversion failure on '@sen_joemanchin⁩' in 'mbcsToSbcs': dot
+## substituted for <e2>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in text.default(x1, y1, words[i], cex = size[i], offset = 0, srt
+## = rotWord * : conversion failure on '@sen_joemanchin⁩' in 'mbcsToSbcs': dot
+## substituted for <81>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in text.default(x1, y1, words[i], cex = size[i], offset = 0, srt
+## = rotWord * : conversion failure on '@sen_joemanchin⁩' in 'mbcsToSbcs': dot
+## substituted for <a9>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in text.default(x1, y1, words[i], cex = size[i], offset = 0, srt =
+## rotWord * : font metrics unknown for Unicode character U+2069
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in strwidth(words[i], cex = size[i], ...): conversion failure on
+## '@scottmorrisonmp⁩' in 'mbcsToSbcs': dot substituted for <e2>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in strwidth(words[i], cex = size[i], ...): conversion failure on
+## '@scottmorrisonmp⁩' in 'mbcsToSbcs': dot substituted for <81>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in strwidth(words[i], cex = size[i], ...): conversion failure on
+## '@scottmorrisonmp⁩' in 'mbcsToSbcs': dot substituted for <a9>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in text.default(x1, y1, words[i], cex = size[i], offset = 0, srt =
+## rotWord * : conversion failure on '@scottmorrisonmp⁩' in 'mbcsToSbcs': dot
+## substituted for <e2>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in text.default(x1, y1, words[i], cex = size[i], offset = 0, srt =
+## rotWord * : conversion failure on '@scottmorrisonmp⁩' in 'mbcsToSbcs': dot
+## substituted for <81>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in text.default(x1, y1, words[i], cex = size[i], offset = 0, srt =
+## rotWord * : conversion failure on '@scottmorrisonmp⁩' in 'mbcsToSbcs': dot
+## substituted for <a9>
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in text.default(x1, y1, words[i], cex = size[i], offset = 0, srt =
+## rotWord * : font metrics unknown for Unicode character U+2069
+\end{verbatim}
+
+\includegraphics{class4_files/figure-latex/unnamed-chunk-5-1.pdf} 5. The
+Twitter data download comes with a variable called ``Sentiment'' that
+must be calculated by Brandwatch. Use your own method to assign each
+tweet a polarity score (Positive, Negative, Neutral) and compare your
+classification to Brandwatch's (hint: you'll need to revisit the
+``raw\_tweets'' data frame).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dat}\OtherTok{\textless{}{-}}\NormalTok{ raw\_tweets[,}\FunctionTok{c}\NormalTok{(}\DecValTok{4}\NormalTok{,}\DecValTok{6}\NormalTok{, }\DecValTok{10}\NormalTok{)] }\CommentTok{\# Extract Date and Title fields}
+
+\NormalTok{tweets }\OtherTok{\textless{}{-}} \FunctionTok{tibble}\NormalTok{(}\AttributeTok{text =}\NormalTok{ dat}\SpecialCharTok{$}\NormalTok{Title,}
+                  \AttributeTok{id =} \FunctionTok{seq}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(dat}\SpecialCharTok{$}\NormalTok{Title)),}
+                 \AttributeTok{date =} \FunctionTok{as.Date}\NormalTok{(dat}\SpecialCharTok{$}\NormalTok{Date,}\StringTok{\textquotesingle{}\%m/\%d/\%y\textquotesingle{}}\NormalTok{),}
+                 \AttributeTok{sentiment\_brandwatch =}\NormalTok{ dat}\SpecialCharTok{$}\NormalTok{Sentiment)}
+
+\CommentTok{\#let\textquotesingle{}s clean up the URLs from the tweets}
+\NormalTok{tweets}\SpecialCharTok{$}\NormalTok{text }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{"http[\^{}[:space:]]*"}\NormalTok{, }\StringTok{""}\NormalTok{,tweets}\SpecialCharTok{$}\NormalTok{text)}
+\NormalTok{tweets}\SpecialCharTok{$}\NormalTok{text }\OtherTok{\textless{}{-}} \FunctionTok{iconv}\NormalTok{(tweets}\SpecialCharTok{$}\NormalTok{text, }\StringTok{"latin1"}\NormalTok{, }\StringTok{"ASCII"}\NormalTok{, }\AttributeTok{sub=}\StringTok{""}\NormalTok{)}
+\NormalTok{tweets}\SpecialCharTok{$}\NormalTok{text }\OtherTok{\textless{}{-}} \FunctionTok{str\_to\_lower}\NormalTok{(tweets}\SpecialCharTok{$}\NormalTok{text)}
+
+\CommentTok{\#load sentiment lexicons}
+\NormalTok{bing\_sent }\OtherTok{\textless{}{-}} \FunctionTok{get\_sentiments}\NormalTok{(}\StringTok{\textquotesingle{}bing\textquotesingle{}}\NormalTok{)}
+\NormalTok{nrc\_sent }\OtherTok{\textless{}{-}} \FunctionTok{get\_sentiments}\NormalTok{(}\StringTok{\textquotesingle{}nrc\textquotesingle{}}\NormalTok{)}
+
+\CommentTok{\#tokenize tweets to individual words}
+\NormalTok{words }\OtherTok{\textless{}{-}}\NormalTok{ tweets }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(id, date, text, sentiment\_brandwatch) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{unnest\_tokens}\NormalTok{(}\AttributeTok{output =}\NormalTok{ word, }\AttributeTok{input =}\NormalTok{ text, }\AttributeTok{token =} \StringTok{"words"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{anti\_join}\NormalTok{(stop\_words, }\AttributeTok{by =} \StringTok{"word"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{left\_join}\NormalTok{(bing\_sent, }\AttributeTok{by =} \StringTok{"word"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{left\_join}\NormalTok{(}
+    \FunctionTok{tribble}\NormalTok{(}
+      \SpecialCharTok{\textasciitilde{}}\NormalTok{sentiment, }\SpecialCharTok{\textasciitilde{}}\NormalTok{sent\_score,}
+      \StringTok{"positive"}\NormalTok{, }\DecValTok{1}\NormalTok{,}
+      \StringTok{"negative"}\NormalTok{, }\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{),}
+    \AttributeTok{by =} \StringTok{"sentiment"}\NormalTok{)}
+
+\NormalTok{compare\_sents }\OtherTok{\textless{}{-}}\NormalTok{ words }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{sent\_score =} \FunctionTok{replace\_na}\NormalTok{(sent\_score, }\DecValTok{0}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{group\_by}\NormalTok{(id) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{summarize}\NormalTok{(}\AttributeTok{sentiment =} \FunctionTok{mean}\NormalTok{(sent\_score),}
+            \AttributeTok{sentiment\_brandwatch =} \FunctionTok{first}\NormalTok{(sentiment\_brandwatch)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{sentiment =} \FunctionTok{case\_when}\NormalTok{(sentiment }\SpecialCharTok{\textgreater{}=} \FloatTok{0.2} \SpecialCharTok{\textasciitilde{}} \StringTok{"positive"}\NormalTok{,}
+\NormalTok{    sentiment }\SpecialCharTok{\textless{}} \FloatTok{0.2} \SpecialCharTok{\&}\NormalTok{ sentiment }\SpecialCharTok{\textgreater{}} \SpecialCharTok{{-}}\FloatTok{0.2} \SpecialCharTok{\textasciitilde{}} \StringTok{"neutral"}\NormalTok{,}
+\NormalTok{    sentiment }\SpecialCharTok{\textless{}=} \SpecialCharTok{{-}}\FloatTok{0.2} \SpecialCharTok{\textasciitilde{}} \StringTok{"negative"}\NormalTok{))}
+  
+\FunctionTok{table}\NormalTok{(compare\_sents}\SpecialCharTok{$}\NormalTok{sentiment, compare\_sents}\SpecialCharTok{$}\NormalTok{sentiment\_brandwatch)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##           
+##            negative neutral positive
+##   negative       70     112        0
+##   neutral       180    2009       18
+##   positive        0      15        1
+\end{verbatim}
+
+My method of taking the mean after assigning neutral words a zero and
+then splitting at -0.2 to 0.2 for neutral returns fairly similar results
+to the Brandwatch sentiment score. While both models are fairly similar
+for neutral and negative tweets, they disagree on which ones should be
+labeled positive vs.~neutral. There aren't many particularly positive
+tweets in this set which is why there may be less agreement there.
+
+\end{document}
